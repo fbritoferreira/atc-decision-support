@@ -1,0 +1,10 @@
+# Negative Control · Legal wake spacing on one stream
+# Three arrivals on one 28L stream at 9.2 and 10.2 NM in-trail against 5 and 3 NM requirements. Two wake pairs must FORM and both be judged legal. Expected output: no alerts.
+# Exported from the ATC prototype scenario "negative-control-staggered" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 39.861700,-104.673100
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL339,B77W,39.881033,-104.803377,281,2000,155
+00:00:00.00>CRE FFT802,A320,39.910033,-104.998793,281,2800,205
+00:00:00.00>CRE SKW4519,E75L,39.942200,-105.215922,281,3600,230
+00:00:00.00>HOLD

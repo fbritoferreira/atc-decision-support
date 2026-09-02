@@ -1,0 +1,10 @@
+# Runway Conflict
+# Arrival on final while 2 departures queued on same runway.
+# Exported from the ATC prototype scenario "runway-conflict" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE DAL512,A321,37.618800,-122.438524,281,900,150
+00:00:00.00>CRE SWA88,B737,37.668800,-122.396441,281,0,0
+00:00:00.00>CRE JBU621,A320,37.685467,-122.385921,281,0,0
+00:00:00.00>HOLD

@@ -1,0 +1,9 @@
+# Negative Control · ASRS-style safe resolution
+# Two aircraft on KSFO approach briefly within 1.5 NM / 600 ft. ATC issued a vector and they resolved safely. Detector must NOT fire critical.
+# Exported from the ATC prototype scenario "negative-control-asrs" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL512,B738,37.668800,-122.585814,119,4200,200
+00:00:00.00>CRE DAL880,A320,37.680467,-122.611064,119,3600,195
+00:00:00.00>HOLD

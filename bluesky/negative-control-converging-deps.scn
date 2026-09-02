@@ -1,0 +1,9 @@
+# Negative Control · Sequenced crossing departures
+# Two departures on crossing runways released in sequence: one airborne and away, one holding short. Expected output: no alerts.
+# Exported from the ATC prototype scenario "negative-control-converging-deps" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 41.978600,-87.904800
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL1015,B772,42.128600,-87.815121,14,3200,250
+00:00:00.00>CRE SWA711,B738,41.971933,-87.877896,104,0,0
+00:00:00.00>HOLD

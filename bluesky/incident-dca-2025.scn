@@ -1,0 +1,9 @@
+# Potomac Mid-Air · Jan 2025
+# PSA/American Eagle 5342 CRJ-700 on final to KDCA runway 33 collided with a US Army Sikorsky H-60 on helicopter route 4 along the Potomac. Visual separation failed.
+# Exported from the ATC prototype scenario "incident-dca-2025" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 38.852100,-77.037697
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE JIA5342,CRJ7,38.822100,-77.031277,332,350,130
+00:00:00.00>CRE PAT25,H60,38.832100,-77.024856,165,200,100
+00:00:00.00>HOLD

@@ -1,0 +1,9 @@
+# LaGuardia Aborted Takeoff · May 2025
+# American Eagle 4736, an Embraer 175 operated by Republic, was cleared for takeoff on runway 13 while United 2657 was still on that runway after landing. The Republic crew slowed after an automated conflict alert; the two came within 0.27 miles.
+# Exported from the ATC prototype scenario "incident-lga-2025" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 40.777199,-73.872597
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE RPA4736,E175,40.757199,-73.894606,121,0,110
+00:00:00.00>CRE UAL2657,B738,40.770532,-73.881401,31,0,14
+00:00:00.00>HOLD

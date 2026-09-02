@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/
+.tanstack/
+.nitro/
+*.log
+.DS_Store

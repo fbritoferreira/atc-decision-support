@@ -1,0 +1,9 @@
+# ASRS ACN 2071367 · EWR
+# A319 within five miles of a heavy 787 on ILS 22L in IMC, inside the stated CWT minimum. Expected output: a wake warning, never a critical.
+# Exported from the ATC prototype scenario "negative-control-asrs-ewr" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 40.689400,-74.170545
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE HVY787,B788,40.761334,-74.078932,224,3000,190
+00:00:00.00>CRE AWE319,A319,40.818881,-74.005642,224,3000,190
+00:00:00.00>HOLD

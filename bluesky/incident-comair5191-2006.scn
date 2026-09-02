@@ -1,0 +1,8 @@
+# Comair 5191 · 2006
+# CRJ cleared for runway 22 began its takeoff roll on unlit 3,501 ft runway 26 in pre-dawn darkness. Overran at ~137 kts.
+# Exported from the ATC prototype scenario "incident-comair5191-2006" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 38.035066,-84.606738
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE COM5191,CRJ1,38.031733,-84.600390,264,0,85
+00:00:00.00>HOLD

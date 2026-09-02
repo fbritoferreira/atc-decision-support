@@ -1,0 +1,9 @@
+# Negative Control · VFR corridor, vertical separation
+# Two light aircraft 1.9 NM apart laterally, 1,500 ft apart vertically. The geometry the withdrawn Table 1 miscounted 218 times. Expected output: no alerts.
+# Exported from the ATC prototype scenario "negative-control-vfr-corridor" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 33.942500,-118.408100
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE N481TC,C172,34.042500,-118.448280,90,3500,110
+00:00:00.00>CRE N9202M,PA28,34.012500,-118.458325,270,5000,120
+00:00:00.00>HOLD

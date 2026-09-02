@@ -1,0 +1,9 @@
+# American 11 · 2001 (blind spot)
+# Transponder off, 100° route deviation, descending toward Manhattan. This population sees nothing — and that is the documented finding.
+# Exported from the ATC prototype scenario "incident-aa11-2001" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 40.639800,-73.778900
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE AAL11,B762,41.139800,-73.603188,190,26500,430
+00:00:00.00>CRE UAL175,B762,40.939800,-74.327999,250,31000,470
+00:00:00.00>HOLD

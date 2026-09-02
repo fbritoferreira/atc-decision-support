@@ -1,0 +1,10 @@
+# Wake-Turbulence Violation
+# Light jet sequenced too close behind heavy on 28L.
+# Exported from the ATC prototype scenario "wake-violation" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL901,B789,37.628467,-122.438524,281,1500,160
+00:00:00.00>CRE SKW42,CRJ7,37.631800,-122.459566,281,2400,180
+00:00:00.00>CRE AAL77,B77W,37.657633,-122.627897,281,4800,230
+00:00:00.00>HOLD

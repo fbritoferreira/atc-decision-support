@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+title: "ATC Decision-Support Prototype: a specialist-detector architecture for air traffic conflict alerting"
+message: "If you use this software or its analysis scripts, please cite it."
+type: software
+authors:
+  - given-names: Filipe
+    family-names: Brito Ferreira
+    email: me@fbritoferreira.com
+    orcid: "https://orcid.org/0009-0005-0200-9417"
+license: Apache-2.0
+version: 0.6.0
+date-released: "2026-09-02"
+# Public since 2026-09-02 and the URL resolves; verified 200 the same day. This
+# comment previously said the opposite, that the repository was not public and
+# the link answered 404, and it kept saying so inside the now-public repository,
+# which is a note telling a reader the thing they are reading does not exist.
+# The reserved name was chosen so the citation would not change when the code
+# was published, and it did not.
+repository-code: "https://github.com/fbritoferreira/atc-decision-support"
+abstract: >-
+  A research prototype testing whether air traffic control conflict alerting can
+  be composed from a population of small, independent, deterministic detectors
+  sharing a SimState to Alert contract, rather than from a single monolithic rule
+  function. Eleven detectors run behind one orchestrator. Includes 28 scenarios:
+  9 incidents reconstructed from NTSB, ICAO, CIAIAC and ANSV reports, 11
+  negative controls encoding events that resolved safely, three of them from
+  specific NASA ASRS reports, and 8 operational demonstrations loaded from the
+  application's scenario picker. Ships a monolithic reimplementation of the same
+  doctrine for architectural comparison, a live mode ingesting ADS-B and METAR
+  for seventeen airports of which ten are in the United States, and the analysis
+  scripts behind the reported false-positive sampling. The measurement windows
+  themselves are not distributed, so those scripts re-run on a window the user
+  samples rather than reproducing the published figures. The software is a
+  prototype and is not certified or usable for operational air traffic
+  control.
+keywords:
+  - air-traffic-control
+  - decision-support
+  - conflict-detection
+  - aviation-safety
+  - deterministic-systems
+  - ADS-B
+# doi: 10.5281/zenodo.XXXXXXX  # TODO: fill after the Zenodo deposit is created

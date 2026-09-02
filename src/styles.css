@@ -1,0 +1,130 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/*
+ * Operator-display palette. This screen is read in a dim room, at a glance,
+ * sometimes from a couple of metres away, so the tokens are tuned for that:
+ *
+ *  - text on panel >= 12:1, dim text >= 7:1 (the old dim value sat near 4:1
+ *    and carried real data at 10px)
+ *  - severity is never encoded by hue alone: every severity surface pairs its
+ *    colour with a text tag, and critical renders inverse-video (red fill,
+ *    dark text), the same convention STARS uses for alerts
+ *  - phosphor green means one thing only: nominal / OK. It is not a general
+ *    accent colour.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-bg: #04080a;
+  --color-panel: #0a1214;
+  --color-panel-strong: #101c20;
+  --color-line: #1e3a42;
+  --color-text: #e6f2ef;
+  --color-text-dim: #8fb0ab;
+  --color-phosphor: #4ade80;
+  --color-phosphor-dim: #166534;
+
+  --color-critical: #ff453a;
+  --color-critical-ink: #12060a;
+  --color-warning: #ffb340;
+  --color-advisory: #64d2ff;
+  --color-info: #8fb0ab;
+
+  /* Legacy aliases; components migrate to the severity tokens above. */
+  --color-amber: #ffb340;
+  --color-red: #ff453a;
+  --color-cyan: #64d2ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+}
+
+.panel-header {
+  background: var(--color-panel-strong);
+  border-bottom: 1px solid var(--color-line);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-text-dim);
+}
+
+/* Retained for the radar sweep only. Text never glows: glow blurs edges and
+   costs legibility at exactly the distance this display is read from. */
+.phosphor-glow {
+  text-shadow: 0 0 6px currentColor;
+}
+
+.radar-canvas {
+  background: #050e11;
+}
+
+/* Severity chip: fixed-width tag so counts hold position as they change.
+   Colour + text label together, never colour alone. */
+.sev-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sev-chip[data-zero="true"] {
+  opacity: 0.35;
+  border-style: dashed;
+  font-weight: 400;
+}
+
+/* Inverse-video: the one loud device on the screen, reserved for critical. */
+.sev-inverse {
+  background: var(--color-critical);
+  color: var(--color-critical-ink);
+  border-color: var(--color-critical);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-advisory);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

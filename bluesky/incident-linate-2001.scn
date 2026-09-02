@@ -1,0 +1,10 @@
+# Linate Disaster · 2001
+# SAS MD-87 in takeoff roll on runway 36R when a Cessna Citation that had taken the wrong taxiway entered the active runway. Heavy fog.
+# Exported from the ATC prototype scenario "incident-linate-2001" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 45.445099,9.276740
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE SAS686,MD87,45.436766,9.276740,357,0,80
+00:00:00.00>CRE IEBR,C525,45.441766,9.274364,357,0,15
+00:00:00.00>CRE AZA2030,MD82,45.378432,9.205474,357,1500,160
+00:00:00.00>HOLD

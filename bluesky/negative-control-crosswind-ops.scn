@@ -1,0 +1,8 @@
+# Negative Control · Crosswind inside limits
+# Sustained crosswind component ~22 kts against a 25 kt limit. Expected output: no alerts.
+# Exported from the ATC prototype scenario "negative-control-crosswind-ops" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 42.365600,-71.009600
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE ACA759,A320,42.598933,-70.964485,14,3900,200
+00:00:00.00>HOLD
