@@ -1,0 +1,9 @@
+# Negative Control · Go-around, spacing restored
+# Trailing arrival breaks off and climbs on an offset heading; pair briefly at 1.6 NM / 800 ft. Warning acceptable, critical is a failure.
+# Exported from the ATC prototype scenario "negative-control-goaround" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 40.639800,-73.778900
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE JBU1607,A321,40.623133,-73.954612,281,1800,145
+00:00:00.00>CRE DAL2158,B739,40.606467,-73.980968,311,2600,180
+00:00:00.00>HOLD

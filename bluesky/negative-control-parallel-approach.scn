@@ -1,0 +1,9 @@
+# Negative Control · Simultaneous parallel approaches
+# Two arrivals abreast on 28L and 28R at the FAA minimum 4,300 ft runway separation for simultaneous independent ILS. Ordinary operations. Critical must be zero; the warning tier currently fires, which is the defect this control documents.
+# Exported from the ATC prototype scenario "negative-control-parallel-approach" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL418,B739,37.644567,-122.543731,281,2500,160
+00:00:00.00>CRE AAL1902,A321,37.656150,-122.540891,281,2500,158
+00:00:00.00>HOLD

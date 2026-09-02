@@ -1,0 +1,10 @@
+# USAir 1493 / SkyWest 5569 · 1991
+# USAir 737 cleared to land on 24L while SkyWest Metroliner was holding in position on the same runway. Collision on touchdown.
+# Exported from the ATC prototype scenario "incident-lax-1991" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 33.942500,-118.408100
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE USA1493,B733,33.937500,-118.468370,244,800,140
+00:00:00.00>CRE SKW5569,SW4,33.942500,-118.416136,244,0,0
+00:00:00.00>CRE WAL1186,B733,33.959167,-118.609000,281,2500,190
+00:00:00.00>HOLD

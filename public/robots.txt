@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://atc.fbritoferreira.com/sitemap.xml

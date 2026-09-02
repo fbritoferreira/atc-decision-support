@@ -1,0 +1,9 @@
+# Drill · Hijack code 7500
+# Synthetic drill: a crew sets 7500 per post-2001 procedure. The squawk-emergency detector must raise it critical without on-frequency acknowledgement.
+# Exported from the ATC prototype scenario "drill-squawk-7500" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL2136,B738,37.752133,-122.796228,90,12000,320
+00:00:00.00>CRE SWA455,B737,37.585467,-122.669980,281,5200,210
+00:00:00.00>HOLD

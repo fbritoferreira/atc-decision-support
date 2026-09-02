@@ -1,0 +1,11 @@
+# Avianca 052 · 1990
+# Boeing 707 from Bogotá held over JFK in stack three times. Fuel exhausted on approach. Crew did not declare emergency.
+# Exported from the ATC prototype scenario "incident-avianca052-1990" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 40.639800,-73.778900
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE AVA052,B707,40.573133,-73.954612,22,3000,200
+00:00:00.00>CRE AAL2,B72S,40.539800,-74.086395,281,4000,220
+00:00:00.00>CRE DAL10,L101,40.606467,-74.218179,281,4000,220
+00:00:00.00>CRE UAL44,B722,40.689800,-74.327999,281,5500,220
+00:00:00.00>HOLD

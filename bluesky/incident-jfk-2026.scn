@@ -1,0 +1,9 @@
+# JFK Airborne Near-Miss · Apr 2026
+# American Eagle 4464 and Air Canada Express 554, both Embraer 175s, came within 350 ft vertically and about half a mile horizontally on parallel approaches to runways 31L and 31R. Both crews received TCAS resolution advisories and went around.
+# Exported from the ATC prototype scenario "incident-jfk-2026" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 40.639800,-73.778900
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE RPA4464,E175,40.676467,-73.745954,330,1850,150
+00:00:00.00>CRE JZA554,E175,40.671467,-73.737168,314,1500,148
+00:00:00.00>HOLD

@@ -1,0 +1,9 @@
+# ASRS ACN 2069720 · ZMA
+# EMB-175 descending behind a heavy 787 en route, ATC wake caution issued. Approach wake minima do not apply en route, so no wake pair forms; expected output: nothing above warning.
+# Exported from the ATC prototype scenario "negative-control-asrs-zma" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 25.796011,-80.289751
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE HVY788,B788,25.462678,-80.030592,330,15000,290
+00:00:00.00>CRE RPA175,E75L,25.376011,-79.975058,330,16000,270
+00:00:00.00>HOLD

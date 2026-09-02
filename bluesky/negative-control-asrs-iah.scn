@@ -1,0 +1,11 @@
+# ASRS CALLBACK 461 · IAH
+# Departure level at 2,000 ft with advised traffic crossing 1,000 ft overhead, all pilots visual. Normal crossing separation on the proximity doctrine's vertical boundary; expected output: no alerts.
+# Exported from the ATC prototype scenario "negative-control-asrs-iah" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 29.984400,-95.341400
+00:00:00.00>ZOOM 2
+# EJA210: type not stated in the source record; B738 for the performance model only
+00:00:00.00>CRE EJA210,B738,29.884400,-95.264432,150,2000,250
+# XING01: type not stated in the source record; B738 for the performance model only
+00:00:00.00>CRE XING01,B738,29.886067,-95.262508,60,3000,210
+00:00:00.00>HOLD

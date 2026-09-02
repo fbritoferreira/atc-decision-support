@@ -1,0 +1,16 @@
+{
+  "//": "The edge proxy is excluded from tsconfig.json because it targets the Cloudflare Pages runtime rather than the browser, and it was therefore checked by nothing at all: three files, every live request, including the one whose missing User-Agent header stopped the deployed site fetching data. This config covers exactly that directory with the runtime's own ambient types. Run via `pnpm typecheck:functions`, which verify-like-ci.sh and deploy.yml both call.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["functions/**/*.ts"]
+}

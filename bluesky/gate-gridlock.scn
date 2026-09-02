@@ -1,0 +1,10 @@
+# Gate Gridlock
+# Wide-body B2 stuck under tow. Two heavies inbound assigned to B2.
+# Exported from the ATC prototype scenario "gate-gridlock" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL228,B789,37.618800,-122.480607,281,1200,155
+00:00:00.00>CRE AAL77,B77W,37.652133,-122.712062,281,3500,210
+00:00:00.00>CRE FDX901,B763,37.535467,-122.901435,281,5000,240
+00:00:00.00>HOLD

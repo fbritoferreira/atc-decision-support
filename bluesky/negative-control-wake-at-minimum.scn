@@ -1,0 +1,9 @@
+# Negative Control · Wake spacing just inside the minimum
+# A medium 5.3 NM behind a heavy against a 5 NM requirement, 0.3 NM of margin. The pair must form and stay silent. Expected output: no alerts.
+# Exported from the ATC prototype scenario "negative-control-wake-at-minimum" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 39.861700,-104.673100
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE DAL1902,B77W,39.871367,-104.738239,281,1600,150
+00:00:00.00>CRE AAL2288,A321,39.888200,-104.851146,281,2400,165
+00:00:00.00>HOLD

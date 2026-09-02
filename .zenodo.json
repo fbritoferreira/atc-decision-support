@@ -1,0 +1,37 @@
+{
+  "title": "ATC Decision-Support Prototype: a specialist-detector architecture for air traffic conflict alerting",
+  "upload_type": "software",
+  "license": "Apache-2.0",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Brito Ferreira, Filipe",
+      "orcid": "0009-0005-0200-9417"
+    }
+  ],
+  "description": "<p>A research prototype testing whether air traffic control conflict alerting can be composed from a population of small, independent, deterministic detectors sharing a SimState to Alert contract, rather than from a single monolithic rule function. Eleven detectors run behind one orchestrator, each implementing one published doctrine from FAA JO 7110.65 and related sources, so every alert traces to a rule a reader can check.</p><p>Includes 28 deterministic scenarios: 9 incidents reconstructed from NTSB, ICAO, CIAIAC and ANSV reports, 11 negative controls encoding events that resolved safely, three of them from specific NASA ASRS reports, and 8 operational demonstrations. A monolithic reimplementation of the same doctrine runs beside the detector population on every scenario, so the architectural claim is measured rather than asserted, and a per-detector ablation reports what each detector contributes rather than what it emitted.</p><p>Also ships a live mode ingesting ADS-B and METAR for seventeen airports, ten of them in the United States, and the analysis scripts behind the reported sampling. The measurement windows are archived separately with the accompanying paper, so these scripts re-run against a window the user samples unless those are fetched.</p><p>This is a research prototype. It is not certified, and it is not usable for operational air traffic control.</p>",
+  "keywords": [
+    "air traffic control",
+    "decision-support",
+    "conflict-detection",
+    "aviation-safety",
+    "deterministic-systems",
+    "ADS-B",
+    "explainability",
+    "software-verification"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/fbritoferreira/atc-joas-paper",
+      "relation": "isSupplementedBy",
+      "scheme": "url",
+      "resource_type": "dataset"
+    },
+    {
+      "identifier": "https://www.fbritoferreira.com/research/atc-decision-support/",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Metadata is pinned here rather than left to Zenodo's defaults from the GitHub release, which take the repository description and the account name and drop the ORCID. The DOI this produces is version-specific; the concept DOI, which resolves to the latest version, is the one to cite in a paper. Neither is written into CITATION.cff until the deposit exists, because a placeholder DOI that looks real is worse than an absent one."
+}

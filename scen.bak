@@ -1,0 +1,1759 @@
+import { seedState } from "./data";
+import type { Flight, Gate, SimState, Weather } from "./types";
+
+export type ScenarioId =
+  | "nominal"
+  | "wake-violation"
+  | "runway-conflict"
+  | "gate-gridlock"
+  | "crosswind-storm"
+  | "cascading-rush"
+  | "crisis"
+  | "incident-tenerife-1977"
+  | "incident-avianca052-1990"
+  | "incident-lax-1991"
+  | "incident-linate-2001"
+  | "incident-dca-2025"
+  | "incident-lga-2025"
+  | "incident-jfk-2026"
+  | "incident-comair5191-2006"
+  | "incident-aa11-2001"
+  | "drill-squawk-7500"
+  | "negative-control-asrs"
+  | "negative-control-goaround"
+  | "negative-control-converging-deps"
+  | "negative-control-staggered"
+  | "negative-control-vfr-corridor"
+  | "negative-control-crosswind-ops"
+  | "negative-control-wake-at-minimum"
+  | "negative-control-parallel-approach"
+  | "negative-control-asrs-ewr"
+  | "negative-control-asrs-iah"
+  | "negative-control-asrs-zma";
+
+export type IncidentInfo = {
+  year: number;
+  location: string;
+  report: string;
+  summary: string;
+  aiWouldFlag: string;
+};
+
+export type Scenario = {
+  id: ScenarioId;
+  name: string;
+  brief: string;
+  build: () => SimState;
+  incident?: IncidentInfo;
+};
+
+const baseFlight = (id: string, callsign: string, overrides: Partial<Flight>): Flight => ({
+  id,
+  callsign,
+  type: "arrival",
+  aircraft: "B738",
+  wake: "medium",
+  origin: "KLAX",
+  destination: "KSFO",
+  phase: "approach",
+  altitudeFt: 4000,
+  speedKts: 220,
+  headingDeg: 281,
+  positionNm: { x: -20, y: 0 },
+  fuelMin: 90,
+  etaMin: 10,
+  squawk: "2400",
+  ...overrides,
+});
+
+const buildNominal = (): SimState => seedState();
+
+// Positions sit on one lateral stream to 28L (cross-track ~0 for heading
+// 281): the wake doctrine pairs same-path followers only, and the original
+// scattered positions put these arrivals 2.7 NM apart laterally — three
+// different streams, which is not what this scenario means.
+const buildWakeViolation = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    flights: [
+      baseFlight("w1", "UAL901", {
+        aircraft: "B789",
+        wake: "heavy",
+        phase: "final",
+        altitudeFt: 1500,
+        speedKts: 160,
+        positionNm: { x: -3, y: -0.58 },
+        assignedRunway: "28L",
+        etaMin: 3,
+        fuelMin: 60,
+      }),
+      baseFlight("w2", "SKW42", {
+        aircraft: "CRJ7",
+        // A CRJ-700 is ICAO Medium at about 34 tonnes, an order of
+        // magnitude above the 7-tonne light threshold. Read "light" here and
+        // "medium" on the same type in incident-dca-2025 until 2026-08-29.
+        wake: "medium",
+        phase: "approach",
+        altitudeFt: 2400,
+        speedKts: 180,
+        positionNm: { x: -4, y: -0.78 },
+        assignedRunway: "28L",
+        etaMin: 4,
+        fuelMin: 80,
+      }),
+      baseFlight("w3", "AAL77", {
+        aircraft: "B77W",
+        wake: "heavy",
+        phase: "approach",
+        altitudeFt: 4800,
+        speedKts: 230,
+        positionNm: { x: -12, y: -2.33 },
+        assignedRunway: "28L",
+        etaMin: 12,
+        fuelMin: 50,
+      }),
+    ],
+  };
+};
+
+const buildRunwayConflict = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    flights: [
+      baseFlight("r1", "DAL512", {
+        aircraft: "A321",
+        phase: "final",
+        altitudeFt: 900,
+        speedKts: 150,
+        positionNm: { x: -3, y: 0 },
+        assignedRunway: "01R",
+        etaMin: 2,
+        fuelMin: 30,
+      }),
+      baseFlight("r2", "SWA88", {
+        type: "departure",
+        aircraft: "B737",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 0,
+        positionNm: { x: -1, y: -3 },
+        assignedRunway: "01R",
+        destination: "KPDX",
+        origin: "KSFO",
+        etaMin: 0,
+        fuelMin: 360,
+      }),
+      baseFlight("r3", "JBU621", {
+        type: "departure",
+        aircraft: "A320",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 0,
+        positionNm: { x: -0.5, y: -4 },
+        assignedRunway: "01R",
+        destination: "KJFK",
+        origin: "KSFO",
+        etaMin: 0,
+        fuelMin: 410,
+      }),
+    ],
+  };
+};
+
+const buildGateGridlock = (): SimState => {
+  const base = seedState();
+  const gates: Gate[] = base.gates.map((g) => ({ ...g, occupiedBy: undefined }));
+  const b2 = gates.find((g) => g.id === "B2");
+  if (b2) b2.occupiedBy = "stuck-tow";
+  return {
+    ...base,
+    gates,
+    flights: [
+      baseFlight("g1", "UAL228", {
+        aircraft: "B789",
+        wake: "heavy",
+        phase: "final",
+        altitudeFt: 1200,
+        speedKts: 155,
+        positionNm: { x: -5, y: 0 },
+        assignedRunway: "28L",
+        assignedGate: "B2",
+        etaMin: 3,
+        fuelMin: 55,
+      }),
+      baseFlight("g2", "AAL77", {
+        aircraft: "B77W",
+        wake: "heavy",
+        phase: "approach",
+        altitudeFt: 3500,
+        speedKts: 210,
+        positionNm: { x: -16, y: -2 },
+        assignedRunway: "28R",
+        assignedGate: "B2",
+        etaMin: 9,
+        fuelMin: 70,
+      }),
+      baseFlight("g3", "FDX901", {
+        aircraft: "B763",
+        wake: "heavy",
+        phase: "approach",
+        altitudeFt: 5000,
+        speedKts: 240,
+        positionNm: { x: -25, y: 5 },
+        assignedRunway: "28L",
+        assignedGate: "B3",
+        etaMin: 14,
+        fuelMin: 85,
+      }),
+    ],
+  };
+};
+
+const buildCrosswindStorm = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    // Rain without wet pavement was an inconsistency in the original seed;
+    // the runway-surface doctrine made it observable.
+    runways: base.runways.map((r) => ({ ...r, surfaceFriction: "wet" as const })),
+    weather: {
+      windDirDeg: 350,
+      windKts: 32,
+      gustsKts: 44,
+      visibilityNm: 4,
+      ceilingFt: 1800,
+      condition: "MVFR",
+      precipitation: "rain",
+    },
+    flights: [
+      baseFlight("c1", "DAL101", {
+        phase: "approach",
+        positionNm: { x: -18, y: 3 },
+        assignedRunway: "28L",
+        etaMin: 9,
+        fuelMin: 70,
+      }),
+      baseFlight("c2", "UAL202", {
+        phase: "approach",
+        positionNm: { x: -22, y: -1 },
+        assignedRunway: "28R",
+        etaMin: 11,
+        fuelMin: 65,
+      }),
+      baseFlight("c3", "AAL303", {
+        phase: "enroute",
+        altitudeFt: 14000,
+        speedKts: 380,
+        positionNm: { x: -40, y: 10 },
+        assignedRunway: "28L",
+        etaMin: 19,
+        fuelMin: 50,
+      }),
+    ],
+  };
+};
+
+const buildCascadingRush = (): SimState => {
+  const base = seedState();
+  const flights: Flight[] = [];
+  for (let i = 0; i < 6; i++) {
+    flights.push(
+      baseFlight(`s${i}`, `RUSH${100 + i}`, {
+        aircraft: i % 2 === 0 ? "B738" : "A320",
+        phase: "approach",
+        altitudeFt: 6000 - i * 400,
+        speedKts: 220,
+        positionNm: { x: -15 - i * 3, y: i % 2 === 0 ? 1 : -1 },
+        assignedRunway: "28L",
+        etaMin: 4 + i * 1.5,
+        fuelMin: 60 - i * 4,
+      }),
+    );
+  }
+  return { ...base, flights };
+};
+
+const buildCrisis = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    weather: {
+      windDirDeg: 350,
+      windKts: 28,
+      gustsKts: 40,
+      visibilityNm: 3,
+      ceilingFt: 1500,
+      condition: "IFR",
+      precipitation: "thunderstorm",
+    },
+    flights: [
+      baseFlight("x1", "UAL901", {
+        aircraft: "B789",
+        wake: "heavy",
+        phase: "final",
+        altitudeFt: 1200,
+        positionNm: { x: -5, y: -2 },
+        assignedRunway: "28L",
+        assignedGate: "B2",
+        etaMin: 3,
+        fuelMin: 22,
+      }),
+      baseFlight("x2", "SKW42", {
+        aircraft: "CRJ7",
+        // A CRJ-700 is ICAO Medium at about 34 tonnes, an order of
+        // magnitude above the 7-tonne light threshold. Read "light" here and
+        // "medium" on the same type in incident-dca-2025 until 2026-08-29.
+        wake: "medium",
+        phase: "approach",
+        altitudeFt: 2600,
+        positionNm: { x: -9, y: -1 },
+        assignedRunway: "28L",
+        assignedGate: "B2",
+        etaMin: 4,
+        fuelMin: 18,
+      }),
+      baseFlight("x3", "FDX901", {
+        aircraft: "B763",
+        wake: "heavy",
+        phase: "approach",
+        altitudeFt: 4800,
+        positionNm: { x: -18, y: 3 },
+        assignedRunway: "28L",
+        assignedGate: "B3",
+        etaMin: 9,
+        fuelMin: 40,
+      }),
+      baseFlight("x4", "SWA88", {
+        type: "departure",
+        aircraft: "B737",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 0,
+        positionNm: { x: -1, y: -3 },
+        assignedRunway: "28L",
+        origin: "KSFO",
+        destination: "KLAX",
+        etaMin: 0,
+        fuelMin: 280,
+      }),
+      baseFlight("x5", "AAL77", {
+        aircraft: "B77W",
+        wake: "heavy",
+        phase: "enroute",
+        altitudeFt: 12000,
+        speedKts: 360,
+        positionNm: { x: -38, y: 8 },
+        assignedRunway: "28R",
+        assignedGate: "B3",
+        etaMin: 16,
+        fuelMin: 35,
+      }),
+    ],
+  };
+};
+
+const lowVisFog: Weather = {
+  windDirDeg: 30,
+  windKts: 8,
+  gustsKts: 12,
+  visibilityNm: 0.3,
+  ceilingFt: 200,
+  condition: "LIFR",
+  precipitation: "none",
+};
+
+const buildTenerife1977 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "GCXO TWR (reconstruction)",
+    // Los Rodeos (GCXO; GCRR is Lanzarote): single runway 12/30, 3,400 m. Both 747s were on
+    // runway 30; heading stored for the direction in use.
+    runways: [
+      { id: "12/30", headingDeg: 296, lengthFt: 11155, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    weather: lowVisFog,
+    flights: [
+      baseFlight("klm-4805", "KLM4805", {
+        aircraft: "B742",
+        wake: "heavy",
+        type: "departure",
+        origin: "GCXO",
+        destination: "EHAM",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 30,
+        headingDeg: 300,
+        positionNm: { x: 0, y: -0.3 },
+        assignedRunway: "12/30",
+        etaMin: 0,
+        fuelMin: 380,
+        squawk: "1107",
+      }),
+      baseFlight("paa-1736", "PAA1736", {
+        aircraft: "B742",
+        wake: "heavy",
+        type: "departure",
+        origin: "GCXO",
+        destination: "KLAX",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 10,
+        headingDeg: 120,
+        positionNm: { x: -0.4, y: 0.2 },
+        assignedRunway: "12/30",
+        etaMin: 0,
+        fuelMin: 420,
+        // Mode 3/A codes are octal, so no digit above 7 exists. This read
+        // "1108" until 2026-08-29, which is not a code any transponder can
+        // set. The value is illustrative filler either way, and the last
+        // digit is changed rather than the whole code so it stays the
+        // number the scenario author reached for.
+        squawk: "1107",
+      }),
+    ],
+  };
+};
+
+const buildAvianca0521990 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KJFK TWR (reconstruction)",
+    // KJFK geometry from the registry, for the two runways the
+    // reconstruction assigns.
+    runways: [
+      { id: "04R/22L", headingDeg: 44, lengthFt: 8400, mode: "mixed", surfaceFriction: "dry" },
+      { id: "13L/31R", headingDeg: 134, lengthFt: 10000, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    weather: {
+      windDirDeg: 30,
+      windKts: 14,
+      gustsKts: 22,
+      visibilityNm: 1.5,
+      ceilingFt: 700,
+      condition: "IFR",
+      precipitation: "rain",
+    },
+    flights: [
+      baseFlight("ava-052", "AVA052", {
+        aircraft: "B707",
+        wake: "heavy",
+        type: "arrival",
+        origin: "SKBO",
+        destination: "KJFK",
+        phase: "approach",
+        altitudeFt: 3000,
+        speedKts: 200,
+        headingDeg: 22,
+        positionNm: { x: -8, y: 4 },
+        assignedRunway: "04R/22L",
+        etaMin: 4,
+        fuelMin: 8,
+        squawk: "2101",
+      }),
+      baseFlight("ava-stack-1", "AAL2", {
+        aircraft: "B72S",
+        phase: "approach",
+        positionNm: { x: -14, y: 6 },
+        assignedRunway: "04R/22L",
+        etaMin: 9,
+        fuelMin: 32,
+      }),
+      baseFlight("ava-stack-2", "DAL10", {
+        aircraft: "L101",
+        wake: "heavy",
+        phase: "approach",
+        positionNm: { x: -20, y: 2 },
+        assignedRunway: "04R/22L",
+        etaMin: 14,
+        fuelMin: 48,
+      }),
+      baseFlight("ava-stack-3", "UAL44", {
+        aircraft: "B722",
+        phase: "approach",
+        altitudeFt: 5500,
+        positionNm: { x: -25, y: -3 },
+        assignedRunway: "13L/31R",
+        etaMin: 18,
+        fuelMin: 60,
+      }),
+    ],
+  };
+};
+
+const buildLAX1991 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KLAX TWR (reconstruction)",
+    // LAX 24L (the 06R/24L strip), operations on the 24L end.
+    runways: [
+      { id: "24L", headingDeg: 249, lengthFt: 10885, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    weather: {
+      windDirDeg: 260,
+      windKts: 6,
+      gustsKts: 8,
+      visibilityNm: 6,
+      ceilingFt: 4000,
+      condition: "VFR",
+      precipitation: "none",
+    },
+    flights: [
+      baseFlight("us-1493", "USA1493", {
+        aircraft: "B733",
+        wake: "medium",
+        type: "arrival",
+        origin: "KCOS",
+        destination: "KLAX",
+        phase: "final",
+        altitudeFt: 800,
+        speedKts: 140,
+        headingDeg: 244,
+        positionNm: { x: -3, y: 0.3 },
+        assignedRunway: "24L",
+        etaMin: 1,
+        fuelMin: 40,
+        squawk: "2401",
+      }),
+      baseFlight("skw-5569", "SKW5569", {
+        aircraft: "SW4",
+        wake: "light",
+        type: "departure",
+        origin: "KLAX",
+        destination: "KPMD",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 0,
+        headingDeg: 244,
+        positionNm: { x: -0.4, y: 0 },
+        assignedRunway: "24L",
+        etaMin: 0,
+        fuelMin: 110,
+        squawk: "2402",
+      }),
+      baseFlight("us-flw", "WAL1186", {
+        aircraft: "B733",
+        wake: "medium",
+        type: "arrival",
+        origin: "KSAN",
+        destination: "KLAX",
+        phase: "approach",
+        altitudeFt: 2500,
+        speedKts: 190,
+        positionNm: { x: -10, y: -1 },
+        assignedRunway: "24L",
+        etaMin: 6,
+        fuelMin: 55,
+      }),
+    ],
+  };
+};
+
+const buildDCA2025 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KDCA TWR (reconstruction)",
+    weather: {
+      windDirDeg: 350,
+      windKts: 6,
+      gustsKts: 10,
+      visibilityNm: 10,
+      ceilingFt: 8000,
+      condition: "VFR",
+      precipitation: "none",
+    },
+    runways: [
+      { id: "01/19", headingDeg: 14, lengthFt: 7169, mode: "mixed", surfaceFriction: "dry" },
+      { id: "15/33", headingDeg: 152, lengthFt: 5204, mode: "mixed", surfaceFriction: "dry" },
+      { id: "04/22", headingDeg: 44, lengthFt: 5000, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    flights: [
+      baseFlight("psa-5342", "JIA5342", {
+        aircraft: "CRJ7",
+        wake: "medium",
+        type: "arrival",
+        origin: "KICT",
+        destination: "KDCA",
+        phase: "final",
+        altitudeFt: 350,
+        speedKts: 130,
+        headingDeg: 332,
+        positionNm: { x: 0.3, y: 1.8 },
+        assignedRunway: "15/33",
+        etaMin: 1,
+        fuelMin: 35,
+        squawk: "2152",
+      }),
+      baseFlight("pat-25", "PAT25", {
+        aircraft: "H60",
+        wake: "medium",
+        type: "departure",
+        origin: "KDAA",
+        destination: "KDAA",
+        phase: "enroute",
+        altitudeFt: 200,
+        speedKts: 100,
+        headingDeg: 165,
+        positionNm: { x: 0.6, y: 1.2 },
+        etaMin: 0,
+        fuelMin: 90,
+        squawk: "1234",
+      }),
+    ],
+  };
+};
+
+const buildLGA2025 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KLGA TWR (reconstruction)",
+    weather: {
+      windDirDeg: 130,
+      windKts: 10,
+      gustsKts: 14,
+      visibilityNm: 10,
+      ceilingFt: 6000,
+      condition: "VFR",
+      precipitation: "none",
+    },
+    runways: [
+      { id: "04/22", headingDeg: 31, lengthFt: 7003, mode: "mixed", surfaceFriction: "dry" },
+      { id: "13/31", headingDeg: 121, lengthFt: 7001, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    flights: [
+      baseFlight("rpa-8646", "RPA8646", {
+        aircraft: "E170",
+        wake: "medium",
+        type: "departure",
+        origin: "KLGA",
+        destination: "KIND",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 110,
+        headingDeg: 31,
+        positionNm: { x: -1, y: 1.2 },
+        assignedRunway: "04/22",
+        etaMin: 0,
+        fuelMin: 220,
+        squawk: "1304",
+      }),
+      baseFlight("ual-lga", "UAL2657", {
+        aircraft: "B738",
+        wake: "medium",
+        type: "departure",
+        origin: "KLGA",
+        destination: "KORD",
+        phase: "taxi-out",
+        altitudeFt: 0,
+        speedKts: 14,
+        headingDeg: 31,
+        positionNm: { x: -0.4, y: 0.4 },
+        assignedRunway: "04/22",
+        etaMin: 0,
+        fuelMin: 320,
+        squawk: "1305",
+      }),
+    ],
+  };
+};
+
+const buildJFK2026 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KJFK TWR (reconstruction)",
+    weather: {
+      windDirDeg: 60,
+      windKts: 8,
+      gustsKts: 12,
+      visibilityNm: 10,
+      ceilingFt: 7500,
+      condition: "VFR",
+      precipitation: "none",
+    },
+    runways: [
+      { id: "04L/22R", headingDeg: 44, lengthFt: 12079, mode: "mixed", surfaceFriction: "dry" },
+      { id: "04R/22L", headingDeg: 44, lengthFt: 8400, mode: "mixed", surfaceFriction: "dry" },
+      { id: "13L/31R", headingDeg: 134, lengthFt: 10000, mode: "mixed", surfaceFriction: "dry" },
+      { id: "13R/31L", headingDeg: 134, lengthFt: 14572, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    flights: [
+      baseFlight("aal-jfk", "AAL421", {
+        aircraft: "B738",
+        wake: "medium",
+        type: "departure",
+        origin: "KJFK",
+        destination: "KORD",
+        phase: "enroute",
+        altitudeFt: 800,
+        speedKts: 165,
+        headingDeg: 44,
+        positionNm: { x: 1.5, y: -2.2 },
+        etaMin: 0,
+        fuelMin: 320,
+        squawk: "2141",
+      }),
+      baseFlight("aca-jfk", "ACA811", {
+        aircraft: "A321",
+        wake: "medium",
+        type: "departure",
+        origin: "KJFK",
+        destination: "CYYZ",
+        phase: "enroute",
+        altitudeFt: 950,
+        speedKts: 175,
+        headingDeg: 134,
+        positionNm: { x: 1.4, y: -2.5 },
+        etaMin: 0,
+        fuelMin: 280,
+        squawk: "2142",
+      }),
+    ],
+  };
+};
+
+const buildLinate2001 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "LIML TWR (reconstruction)",
+    // Linate (LIML): main runway 36R/18L, 2,442 m; the SAS MD-87 was rolling
+    // on 36R in fog.
+    runways: [
+      { id: "36R/18L", headingDeg: 356, lengthFt: 8012, mode: "mixed", surfaceFriction: "dry" },
+    ],
+    weather: {
+      windDirDeg: 350,
+      windKts: 4,
+      gustsKts: 6,
+      visibilityNm: 0.15,
+      ceilingFt: 100,
+      condition: "LIFR",
+      precipitation: "none",
+    },
+    flights: [
+      baseFlight("sas-686", "SAS686", {
+        aircraft: "MD87",
+        wake: "medium",
+        type: "departure",
+        origin: "LIML",
+        destination: "EKCH",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 80,
+        headingDeg: 357,
+        positionNm: { x: 0, y: 0.5 },
+        assignedRunway: "36R/18L",
+        etaMin: 0,
+        fuelMin: 240,
+        squawk: "5202",
+      }),
+      baseFlight("d-iebr", "IEBR", {
+        aircraft: "C525",
+        wake: "light",
+        type: "departure",
+        origin: "LIML",
+        destination: "EDDP",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 15,
+        headingDeg: 357,
+        positionNm: { x: -0.1, y: 0.2 },
+        assignedRunway: "36R/18L",
+        etaMin: 0,
+        fuelMin: 180,
+        squawk: "5203",
+      }),
+      baseFlight("alitalia", "AZA2030", {
+        aircraft: "MD82",
+        wake: "medium",
+        type: "arrival",
+        origin: "LFPG",
+        destination: "LIML",
+        phase: "approach",
+        altitudeFt: 1500,
+        speedKts: 160,
+        headingDeg: 357,
+        positionNm: { x: -3, y: 4 },
+        assignedRunway: "36R/18L",
+        etaMin: 5,
+        fuelMin: 80,
+      }),
+    ],
+  };
+};
+
+// Comair 5191, Blue Grass Airport (KLEX), 27 August 2006, 06:06 local, dark.
+// Cleared for runway 22 (7,003 ft, lit); began the takeoff roll on runway 26
+// (3,501 ft, unlit). Ran off the end at ~137 kts. 49 of 50 aboard died.
+// NTSB AAR-07/05 cited the crew's failure to use available cues to confirm
+// position, with the single controller's non-observation of the roll among
+// the factors. The runway-identity detector exists for this shape: the 37°
+// gap between clearance heading and actual heading was present and checkable
+// from the moment thrust was applied.
+const buildComair5191 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KLEX TWR",
+    clockMin: 6 * 60 + 6,
+    runways: [
+      { id: "22", headingDeg: 227, lengthFt: 7003, mode: "departures", surfaceFriction: "dry" },
+      { id: "26", headingDeg: 264, lengthFt: 3501, mode: "closed", surfaceFriction: "dry" },
+    ],
+    weather: {
+      windDirDeg: 200,
+      windKts: 5,
+      gustsKts: 5,
+      visibilityNm: 8,
+      ceilingFt: 12000,
+      condition: "VFR", // pre-dawn darkness, not IMC: the cues were lights, not clouds
+      precipitation: "none",
+    },
+    flights: [
+      baseFlight("com-5191", "COM5191", {
+        aircraft: "CRJ1",
+        wake: "medium",
+        type: "departure",
+        origin: "KLEX",
+        destination: "KATL",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 85, // accelerating through the roll; rejection still survivable
+        headingDeg: 264, // aligned with 26, cleared for 22
+        positionNm: { x: 0.3, y: 0.2 },
+        assignedRunway: "22",
+        fuelMin: 210,
+        etaMin: 0,
+        squawk: "2436",
+      }),
+    ],
+  };
+};
+
+// American 11, 11 September 2001, reconstructed at ~08:30 EDT from the 9/11
+// Commission Report and the NTSB flight path study: transponder switched off
+// at 08:21, aircraft off-route and descending south toward Manhattan; United
+// 175 still on its normal westbound profile, squawking its assigned code.
+//
+// This is the corpus's known-blind-spot case, and it is INTENDED to produce
+// zero alerts. None of the four hijacked flights ever squawked 7500; the
+// transponders were turned off. The detectable signatures that morning were
+// transponder loss and route deviation, and this population can see neither:
+// there is no squawk history, no flight-plan conformance, and in live mode an
+// aircraft without a transponder does not exist at all, because ADS-B IS the
+// transponder. On 2001 signatures this system is as blind as the 2001 system
+// was. The scenario exists so that blindness is documented and testable
+// rather than discovered by a reviewer.
+const buildAA11 = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "ZNY (reconstruction)",
+    clockMin: 8 * 60 + 30,
+    flights: [
+      baseFlight("aa-11", "AAL11", {
+        aircraft: "B762",
+        wake: "heavy",
+        type: "arrival", // enroute over the sector; no runway assignment
+        origin: "KBOS",
+        destination: "KLAX",
+        phase: "enroute",
+        altitudeFt: 26500, // descending, per the flight path study
+        speedKts: 430,
+        headingDeg: 190, // ~100° off the filed westbound route
+        positionNm: { x: 8, y: -30 },
+        assignedRunway: undefined,
+        fuelMin: 280,
+        etaMin: 60,
+        squawk: "----", // transponder off since 08:21
+      }),
+      baseFlight("ua-175", "UAL175", {
+        aircraft: "B762",
+        wake: "heavy",
+        type: "arrival",
+        origin: "KBOS",
+        destination: "KLAX",
+        phase: "enroute",
+        altitudeFt: 31000, // still normal at 08:30; hijack began ~08:42
+        speedKts: 470,
+        headingDeg: 250,
+        positionNm: { x: -25, y: -18 },
+        assignedRunway: undefined,
+        fuelMin: 300,
+        etaMin: 70,
+        squawk: "1470",
+      }),
+    ],
+  };
+};
+
+// Synthetic drill for the squawk-emergency doctrine: a crew sets 7500 the way
+// post-2001 procedure trains, and the detector must raise it critical. Kept
+// separate from the AA11 reconstruction, where no such code was ever set.
+const buildSquawkDrill = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KSFO TWR (drill)",
+    flights: [
+      baseFlight("drill-1", "UAL2136", {
+        aircraft: "B738",
+        phase: "enroute",
+        altitudeFt: 12000,
+        speedKts: 320,
+        headingDeg: 90,
+        positionNm: { x: -20, y: -8 },
+        assignedRunway: undefined,
+        etaMin: 22,
+        fuelMin: 180,
+        squawk: "7500",
+      }),
+      baseFlight("drill-2", "SWA455", {
+        aircraft: "B737",
+        phase: "approach",
+        altitudeFt: 5200,
+        speedKts: 210,
+        positionNm: { x: -14, y: 2 },
+        assignedRunway: "28L",
+        etaMin: 8,
+        fuelMin: 90,
+        squawk: "2417",
+      }),
+    ],
+  };
+};
+
+const buildNegativeControl = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KSFO TWR (negative-control scenario)",
+    weather: {
+      windDirDeg: 280,
+      windKts: 8,
+      gustsKts: 10,
+      visibilityNm: 10,
+      ceilingFt: 8000,
+      condition: "VFR",
+      precipitation: "none",
+    },
+    flights: [
+      baseFlight("nc-1", "UAL512", {
+        aircraft: "B738",
+        wake: "medium",
+        type: "arrival",
+        origin: "KORD",
+        destination: "KSFO",
+        phase: "approach",
+        altitudeFt: 4200,
+        speedKts: 200,
+        headingDeg: 119,
+        positionNm: { x: -10, y: -3 },
+        // The scenario declares its runways by single end (28L, 28R, 01L, 01R), so a
+        // strip id resolved to nothing and this control ran with no assigned
+        // runway at all. Both aircraft fly 119 degrees, the reciprocal of these
+        // records, which resolveRunway handles.
+        assignedRunway: "28R",
+        etaMin: 6,
+        fuelMin: 70,
+        squawk: "3401",
+      }),
+      baseFlight("nc-2", "DAL880", {
+        aircraft: "A320",
+        wake: "medium",
+        type: "arrival",
+        origin: "KSEA",
+        destination: "KSFO",
+        phase: "approach",
+        altitudeFt: 3600,
+        speedKts: 195,
+        headingDeg: 119,
+        positionNm: { x: -11.2, y: -3.7 },
+        assignedRunway: "28L",
+        etaMin: 7,
+        fuelMin: 80,
+        squawk: "3402",
+      }),
+    ],
+  };
+};
+
+// The five builders below extend the negative-control corpus from one scenario
+// to six. Each encodes a shape that recurs in ASRS controller narratives: an
+// event that looked like a conflict for a moment and resolved by ordinary
+// procedure. The corpus-wide property, asserted in sim.test.ts, is that none of
+// them produces a critical alert. Warning and advisory tiers are acceptable;
+// several are expected to be completely silent, which is itself the assertion:
+// a detector population that cannot stay quiet on legal operations has no
+// business alerting on illegal ones.
+
+// A trailing arrival breaks off and climbs on an offset heading while the
+// leader continues. During the go-around the pair is briefly inside the
+// warning envelope (1.6 NM / 800 ft) and never near the critical one.
+const buildNegativeGoAround = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KJFK TWR (negative-control scenario)",
+    flights: [
+      baseFlight("ng-1", "JBU1607", {
+        aircraft: "A321",
+        phase: "final",
+        altitudeFt: 1800,
+        speedKts: 145,
+        headingDeg: 281,
+        positionNm: { x: -8, y: 1 },
+        assignedRunway: "28L",
+        etaMin: 4,
+        squawk: "3411",
+      }),
+      baseFlight("ng-2", "DAL2158", {
+        aircraft: "B739",
+        phase: "approach",
+        altitudeFt: 2600,
+        speedKts: 180,
+        headingDeg: 311, // 30° offset: the go-around diverges from the leader
+        positionNm: { x: -9.2, y: 2 },
+        assignedRunway: undefined, // broke off the approach
+        etaMin: 12,
+        squawk: "3412",
+      }),
+    ],
+  };
+};
+
+// Two departures on crossing runways released in sequence: one already
+// airborne and climbing away, one holding short. No simultaneous occupancy, no
+// proximity. Expected output: silence.
+const buildNegativeConvergingDeps = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KORD TWR (negative-control scenario)",
+    flights: [
+      baseFlight("ncd-1", "UAL1015", {
+        aircraft: "B772",
+        wake: "heavy",
+        type: "departure",
+        origin: "KSFO",
+        destination: "EGLL",
+        phase: "departed",
+        altitudeFt: 3200,
+        speedKts: 250,
+        headingDeg: 14,
+        positionNm: { x: 4, y: -9 },
+        fuelMin: 480,
+        etaMin: 0,
+        squawk: "3421",
+      }),
+      baseFlight("ncd-2", "SWA711", {
+        aircraft: "B738",
+        type: "departure",
+        origin: "KSFO",
+        destination: "KPHX",
+        phase: "queued",
+        altitudeFt: 0,
+        speedKts: 0,
+        headingDeg: 104,
+        positionNm: { x: 1.2, y: 0.4 },
+        assignedRunway: "01L",
+        fuelMin: 240,
+        etaMin: 0,
+        squawk: "3422",
+      }),
+    ],
+  };
+};
+
+// Three arrivals to the same runway at legal wake spacing: heavy, then medium
+// at a 4-minute gap against a 3-minute requirement, then medium at 5. Legal
+// flow at capacity is the ordinary state of a busy field, and the system must
+// treat it as unremarkable. Expected output: silence.
+// Legal in-trail spacing on ONE approach stream. This control has to make the
+// wake detector actually run, which the previous version did not: its arrivals
+// sat at y = 0.5, 1.5 and 0.0, which is 1.5 NM of lateral spread against the
+// 0.1 NM stream threshold, so they split into three streams and formed zero
+// pairs. It passed by never reaching the doctrine it claimed to test.
+//
+// Two constraints have to hold together for a pair to form at all, and both
+// are easy to violate by accident:
+//   1. cross-track within LATERAL_CLUSTER_NM, hence y = 0.1933x for heading
+//      281, the same centreline convention buildWakeViolation uses;
+//   2. the follower no more than WAKE_VERTICAL_BAND_FT above the leader.
+//
+// Constraint 2 is why the altitudes step by 800 ft rather than following a 3
+// degree glideslope: on a glideslope, 9 NM of in-trail separation puts the
+// follower about 2,900 ft higher, outside the vortex band, and the pair is
+// skipped. Aircraft level on an intermediate segment before glideslope
+// intercept is the ordinary case this represents.
+const buildNegativeStaggered = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KDEN TWR (negative-control scenario)",
+    flights: [
+      baseFlight("ns-1", "UAL339", {
+        aircraft: "B77W",
+        wake: "heavy",
+        phase: "final",
+        altitudeFt: 2000,
+        speedKts: 155,
+        positionNm: { x: -6, y: -1.16 },
+        assignedRunway: "28L",
+        etaMin: 4,
+        squawk: "3431",
+      }),
+      // 9.17 NM behind a heavy, which requires 5 NM. Legal.
+      baseFlight("ns-2", "FFT802", {
+        aircraft: "A320",
+        phase: "approach",
+        altitudeFt: 2800,
+        speedKts: 205,
+        positionNm: { x: -15, y: -2.9 },
+        assignedRunway: "28L",
+        etaMin: 8,
+        squawk: "3432",
+      }),
+      // 10.19 NM behind a medium, which requires 3 NM. Legal.
+      baseFlight("ns-3", "SKW4519", {
+        aircraft: "E75L",
+        phase: "approach",
+        altitudeFt: 3600,
+        speedKts: 230,
+        positionNm: { x: -25, y: -4.83 },
+        assignedRunway: "28L",
+        etaMin: 13,
+        squawk: "3433",
+      }),
+    ],
+  };
+};
+
+// Simultaneous independent ILS approaches to parallel runways, at the FAA's
+// minimum runway separation for that procedure: 4,300 ft, which is 0.708 NM.
+// This is ordinary high-density operations, not a conflict. Both aircraft are
+// established, tracking the localiser, abreast at the same altitude, and
+// legally separated by the lateral distance the procedure is built on.
+//
+// It is a control for the proximity doctrine, and unlike the others it is
+// expected to FAIL at warning tier, which is why it exists. The warning tier is
+// `horizNm < 2 && vertFt < 1000` over every pair of active aircraft, so a legal
+// parallel pair 0.708 NM abreast sits inside it permanently. The critical tier
+// must stay silent, because the convergence test added for exactly this reason
+// sees no closure between two parallel tracks.
+//
+// External corroboration that this geometry is a known false-alarm source
+// rather than the author's opinion: NASA ASRS CALLBACK reports parallel-approach
+// TCAS nuisance alerts on blunder-free approaches within roughly 2,500 ft, and
+// the AILS work suppresses advisories for specific aircraft on parallel
+// approaches for the same reason. TCAS's own nuisance radius is about 0.41 NM;
+// this detector's warning box is 2 NM, roughly five times wider.
+const buildNegativeParallelApproach = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    // KSFO, not KORD. This control flies 28L and 28R at 4,300 ft with 01L and
+    // 01R also declared, which is San Francisco's layout and not O'Hare's, and
+    // Section 6.8 describes it as arrivals abreast on KSFO's 28L and 28R. The
+    // paper and the geometry agreed; the label did not.
+    sectorId: "KSFO TWR (negative-control scenario)",
+    flights: [
+      baseFlight("np-1", "UAL418", {
+        aircraft: "B739",
+        phase: "final",
+        altitudeFt: 2500,
+        speedKts: 160,
+        positionNm: { x: -8, y: -1.546 },
+        assignedRunway: "28L",
+        etaMin: 4,
+        squawk: "3451",
+      }),
+      baseFlight("np-2", "AAL1902", {
+        aircraft: "A321",
+        phase: "final",
+        altitudeFt: 2500,
+        speedKts: 158,
+        positionNm: { x: -7.865, y: -2.241 },
+        assignedRunway: "28R",
+        etaMin: 4,
+        squawk: "3452",
+      }),
+    ],
+  };
+};
+
+// The boundary case the corpus was missing: spacing that is legal but close,
+// rather than legal and comfortable. A medium 5.3 NM behind a heavy is inside
+// the 5 NM requirement by 0.3 NM, so the detector must stay silent while
+// having genuinely evaluated the pair. A control that is silent because no
+// pair formed proves nothing about the threshold; this one is silent because
+// the threshold is correct.
+const buildNegativeWakeAtMinimum = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KDEN TWR (negative-control scenario)",
+    flights: [
+      baseFlight("nm-1", "DAL1902", {
+        aircraft: "B77W",
+        wake: "heavy",
+        phase: "final",
+        altitudeFt: 1600,
+        speedKts: 150,
+        positionNm: { x: -3, y: -0.58 },
+        assignedRunway: "28L",
+        etaMin: 3,
+        squawk: "3441",
+      }),
+      baseFlight("nm-2", "AAL2288", {
+        aircraft: "A321",
+        phase: "final",
+        altitudeFt: 2400,
+        speedKts: 165,
+        positionNm: { x: -8.2, y: -1.59 },
+        assignedRunway: "28L",
+        etaMin: 6,
+        squawk: "3442",
+      }),
+    ],
+  };
+};
+
+// Two transiting aircraft laterally close (1.9 NM) but vertically separated by
+// 1,500 ft, the everyday geometry of a VFR corridor. The proximity predicate
+// requires BOTH axes inside its envelope, so the vertical separation must keep
+// this silent. This is the control that failed in the withdrawn Table 1, where
+// the reimplemented detector counted 218 such pairs as conflicts.
+const buildNegativeVfrCorridor = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KLAX TWR (negative-control scenario)",
+    flights: [
+      baseFlight("nv-1", "N481TC", {
+        aircraft: "C172",
+        wake: "light",
+        phase: "enroute",
+        altitudeFt: 3500,
+        speedKts: 110,
+        headingDeg: 90,
+        positionNm: { x: -2, y: -6 },
+        assignedRunway: undefined,
+        etaMin: 25,
+        squawk: "1200",
+      }),
+      baseFlight("nv-2", "N9202M", {
+        aircraft: "PA28",
+        wake: "light",
+        phase: "enroute",
+        altitudeFt: 5000,
+        speedKts: 120,
+        headingDeg: 270,
+        positionNm: { x: -2.5, y: -4.2 },
+        assignedRunway: undefined,
+        etaMin: 28,
+        squawk: "1200",
+      }),
+    ],
+  };
+};
+
+// Sustained crosswind component of ~22 kts against the 25 kt limit: inside
+// margins, and exactly the condition a threshold tuned by round number rather
+// than by doctrine would false-alarm on. Expected output: silence.
+const buildNegativeCrosswindOps = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KBOS TWR (negative-control scenario)",
+    weather: {
+      windDirDeg: 104, // 90° off the 01L/01R heading of 014°
+      windKts: 18,
+      gustsKts: 22,
+      visibilityNm: 9,
+      ceilingFt: 6000,
+      condition: "VFR",
+      precipitation: "none",
+    },
+    flights: [
+      baseFlight("nx-1", "ACA759", {
+        aircraft: "A320",
+        phase: "approach",
+        altitudeFt: 3900,
+        speedKts: 200,
+        headingDeg: 14,
+        positionNm: { x: 2, y: -14 },
+        assignedRunway: "01R",
+        etaMin: 8,
+        squawk: "3441",
+      }),
+    ],
+  };
+};
+
+// Three negative controls encoding specific NASA ASRS reports rather than
+// synthetic narrative shapes. Every geometry figure below is stated in the
+// cited record; where the record does not state a value, the encoding says so
+// in place rather than inventing one. Sources: ASRS Database Report Sets
+// (Wake Turbulence Encounters, Update 24, 2024-07-09; Air Traffic Controller
+// Reports) and ASRS CALLBACK Issue 461, June 2018.
+
+// NASA ASRS ACN 2071367, January 2024. An A319 on base to ILS 22L at EWR,
+// IMC, 3,000 ft MSL, put "within 5 nm of a heavy 787 in moderate turbulence";
+// the controller waited for the turn to final to build separation, and the
+// crew discontinued and diverted without loss of separation. Under CWT a B
+// or D category 787 leading an A319 (category F) carries exactly a 5 NM
+// minimum, and "within 5 nm" is inside it, so the correct output is a wake
+// WARNING and never a critical: the deficit is a fraction of a mile against a
+// critical line a full mile inside the requirement. Encoded at 4.8 NM so the
+// verdict does not hang on float rounding at the exact boundary. The 787
+// variant is not stated in the record; every passenger variant is CWT B
+// except the -10 (D), and both impose the same 5 NM on an F follower, so the
+// choice cannot change the requirement.
+const buildNegativeAsrsEwr = (): SimState => {
+  const base = seedState();
+  // Approach course 224: both established inbound, level at intercept
+  // altitude, in trail on one localiser.
+  const course = { x: Math.sin((224 * Math.PI) / 180), y: -Math.cos((224 * Math.PI) / 180) };
+  const at = (dNm: number) => ({ x: -dNm * course.x, y: -dNm * course.y });
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KEWR APP (ASRS ACN 2071367 reconstruction)",
+    runways: [
+      // headingDeg carries the first-named end's course by convention;
+      // resolveRunway adds 180 for the 22L side this scenario flies.
+      { id: "04R/22L", headingDeg: 44, lengthFt: 10000, mode: "mixed", surfaceFriction: "wet" },
+    ],
+    weather: {
+      windDirDeg: 260,
+      windKts: 18,
+      gustsKts: 28,
+      visibilityNm: 3,
+      ceilingFt: 900,
+      condition: "IFR",
+      precipitation: "rain",
+    },
+    flights: [
+      baseFlight("asrs-ewr-lead", "HVY787", {
+        aircraft: "B788",
+        wake: "heavy",
+        type: "arrival",
+        phase: "approach",
+        altitudeFt: 3000,
+        speedKts: 190,
+        headingDeg: 224,
+        positionNm: at(6),
+        assignedRunway: "22L",
+        etaMin: 4,
+        squawk: "2761",
+      }),
+      baseFlight("asrs-ewr-trail", "AWE319", {
+        aircraft: "A319",
+        wake: "medium",
+        type: "arrival",
+        phase: "approach",
+        altitudeFt: 3000,
+        speedKts: 190,
+        headingDeg: 224,
+        positionNm: at(10.8),
+        assignedRunway: "22L",
+        etaMin: 7,
+        squawk: "2762",
+      }),
+    ],
+  };
+};
+
+// ASRS CALLBACK Issue 461, June 2018 ("Clear Weather, Clear Choice, and Clear
+// of Traffic"). A departure off IAH 15L level at its assigned 2,000 ft, ATC
+// advising traffic crossing overhead at 3,000 ft, all three pilots with the
+// traffic in sight; TCAS issued a climb RA anyway, the crew disregarded it
+// with the traffic in sight, and the crossing completed uneventfully. The
+// 1,000 ft crossing separation is normal operation, and it sits exactly on
+// the proximity doctrine's vertical boundary (the predicate requires a gap
+// strictly inside 1,000 ft), so the encoded state must stay silent. The
+// Embraer's model and the crossing type are not stated in the record, so
+// both encode as UNKN rather than as an invented designator.
+const buildNegativeAsrsIah = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "KIAH DEP (ASRS CALLBACK 461 reconstruction)",
+    flights: [
+      baseFlight("asrs-iah-dep", "EJA210", {
+        aircraft: "UNKN",
+        wake: "medium",
+        type: "departure",
+        phase: "departed",
+        altitudeFt: 2000,
+        speedKts: 250,
+        headingDeg: 150,
+        positionNm: { x: 4, y: 6 },
+        etaMin: 0,
+        fuelMin: 180,
+        squawk: "2763",
+      }),
+      baseFlight("asrs-iah-xing", "XING01", {
+        aircraft: "UNKN",
+        wake: "medium",
+        type: "arrival",
+        phase: "enroute",
+        altitudeFt: 3000,
+        speedKts: 210,
+        headingDeg: 60,
+        positionNm: { x: 4.1, y: 5.9 },
+        etaMin: 18,
+        fuelMin: 120,
+        squawk: "2764",
+      }),
+    ],
+  };
+};
+
+// NASA ASRS ACN 2069720, December 2023. An EMB-175 descending on an arrival
+// into MIA airspace, sequenced behind a heavy 787, ATC caution issued; the
+// wake encounter at 16,000 ft caused a 600 ft excursion, the crew asked for a
+// vector and the flight resumed as normal. Doctrinally, en-route wake is
+// advisory territory: the approach wake minima of TBL 5-5-2 do not apply to a
+// descending en-route pair, so the wake doctrine must form no pair here, and
+// the correct system output is nothing above a warning. The in-trail distance
+// is not stated in the record; the encoding places the pair 6 NM apart, wide
+// of every proximity envelope, so the assertion does not hinge on the unstated
+// figure.
+const buildNegativeAsrsZma = (): SimState => {
+  const base = seedState();
+  return {
+    ...base,
+    speed: 0,
+    sectorId: "ZMA (ASRS ACN 2069720 reconstruction)",
+    flights: [
+      baseFlight("asrs-zma-lead", "HVY788", {
+        aircraft: "B788",
+        wake: "heavy",
+        type: "arrival",
+        phase: "enroute",
+        altitudeFt: 15000,
+        speedKts: 290,
+        headingDeg: 330,
+        positionNm: { x: 14, y: 20 },
+        etaMin: 22,
+        fuelMin: 150,
+        squawk: "2765",
+      }),
+      baseFlight("asrs-zma-trail", "RPA175", {
+        aircraft: "E75L",
+        wake: "medium",
+        type: "arrival",
+        phase: "enroute",
+        altitudeFt: 16000,
+        speedKts: 270,
+        headingDeg: 330,
+        positionNm: { x: 17, y: 25.2 },
+        etaMin: 25,
+        fuelMin: 130,
+        squawk: "2766",
+      }),
+    ],
+  };
+};
+
+export const SCENARIOS: Scenario[] = [
+  {
+    id: "nominal",
+    name: "Nominal Ops",
+    brief: "Mixed traffic, mild fuel pressure. Baseline.",
+    build: buildNominal,
+  },
+  {
+    id: "wake-violation",
+    name: "Wake-Turbulence Violation",
+    brief: "Light jet sequenced too close behind heavy on 28L.",
+    build: buildWakeViolation,
+  },
+  {
+    id: "runway-conflict",
+    name: "Runway Conflict",
+    brief: "Arrival on final while 2 departures queued on same runway.",
+    build: buildRunwayConflict,
+  },
+  {
+    id: "gate-gridlock",
+    name: "Gate Gridlock",
+    brief: "Wide-body B2 stuck under tow. Two heavies inbound assigned to B2.",
+    build: buildGateGridlock,
+  },
+  {
+    id: "crosswind-storm",
+    name: "Crosswind Storm",
+    brief: "350°/32G44 wind perpendicular to 28-series runways. IFR risk.",
+    build: buildCrosswindStorm,
+  },
+  {
+    id: "cascading-rush",
+    name: "Arrival Rush",
+    brief: "6 arrivals stacking on 28L within 12 min. Capacity exceeded.",
+    build: buildCascadingRush,
+  },
+  {
+    id: "crisis",
+    name: "Multi-Fault Crisis",
+    brief: "Thunderstorm + wake violation + gate conflict + fuel emergencies stacked.",
+    build: buildCrisis,
+  },
+  {
+    id: "incident-tenerife-1977",
+    name: "Tenerife · 1977",
+    brief: "KLM 4805 began takeoff roll on runway 30 while Pan Am 1736 was still backtaxiing on same runway. Dense fog.",
+    build: buildTenerife1977,
+    incident: {
+      year: 1977,
+      location: "Los Rodeos (GCXO), Tenerife",
+      report: "ICAO/Spanish CIAIAC final report",
+      summary:
+        "Two Boeing 747s collided on runway 30 in heavy fog. The deadliest accident in aviation history.",
+      aiWouldFlag:
+        "RUNWAY CONFLICT — two aircraft assigned the same runway, one queued for departure while the other was still on the active runway. Visibility 0.3 NM forces dependence on positive separation.",
+    },
+  },
+  {
+    id: "incident-avianca052-1990",
+    name: "Avianca 052 · 1990",
+    brief: "Boeing 707 from Bogotá held over JFK in stack three times. Fuel exhausted on approach. Crew did not declare emergency.",
+    build: buildAvianca0521990,
+    incident: {
+      year: 1990,
+      location: "Cove Neck, NY (KJFK approach)",
+      report: "NTSB/AAR-91/04",
+      summary:
+        "Avianca 052 entered holding patterns three times due to weather and traffic. Ran out of fuel on approach to JFK.",
+      aiWouldFlag:
+        "FUEL HOLD — AVA052 fuel remaining below FAR 91.167 reserve relative to ETA. Would have raised critical alert at first hold extension, with explicit \"prioritize for direct approach\" suggestion.",
+    },
+  },
+  {
+    id: "incident-lax-1991",
+    name: "USAir 1493 / SkyWest 5569 · 1991",
+    brief: "USAir 737 cleared to land on 24L while SkyWest Metroliner was holding in position on the same runway. Collision on touchdown.",
+    build: buildLAX1991,
+    incident: {
+      year: 1991,
+      location: "Los Angeles (KLAX)",
+      report: "NTSB/AAR-91/08",
+      summary:
+        "Controller cleared SkyWest 5569 to position-and-hold on 24L, then cleared USAir 1493 to land on the same runway. The Metroliner was not visible to either pilots or tower in twilight.",
+      aiWouldFlag:
+        "RUNWAY CONFLICT — arrival on final + departure queued on the same runway. Would have raised critical alert as soon as the position-and-hold clearance was issued.",
+    },
+  },
+  {
+    id: "incident-linate-2001",
+    name: "Linate Disaster · 2001",
+    brief: "SAS MD-87 in takeoff roll on runway 36R when a Cessna Citation that had taken the wrong taxiway entered the active runway. Heavy fog.",
+    build: buildLinate2001,
+    incident: {
+      year: 2001,
+      location: "Milan Linate (LIML)",
+      report: "ANSV final report (Italy)",
+      summary:
+        "A business jet became disoriented in fog and crossed runway 36R while SAS 686 was rolling for takeoff. 118 fatalities.",
+      aiWouldFlag:
+        "RUNWAY CONFLICT — two aircraft positioned on the active runway with takeoff in progress, visibility 0.15 NM. Would have raised critical alert before takeoff clearance.",
+    },
+  },
+  {
+    id: "incident-dca-2025",
+    name: "Potomac Mid-Air · Jan 2025",
+    brief: "PSA/American Eagle 5342 CRJ-700 on final to KDCA runway 33 collided with a US Army Sikorsky H-60 on helicopter route 4 along the Potomac. Visual separation failed.",
+    build: buildDCA2025,
+    incident: {
+      year: 2025,
+      location: "Reagan National (KDCA)",
+      report: "NTSB DCA25MA108",
+      summary:
+        "67 fatalities. NTSB final report (Feb 2026) cited FAA placement of helicopter route 4, overreliance on visual separation, and 15,214 near-proximity events between helicopters and commercial traffic in the prior 3 years.",
+      aiWouldFlag:
+        "PROXIMITY CONFLICT — CRJ-700 on 1 NM final at ~350 ft, H-60 crossing approach corridor at ~200 ft. Closure rate + altitude overlap below TCAS RA threshold. Would have raised critical pair-conflict alert with explicit helicopter-corridor cause.",
+    },
+  },
+  {
+    id: "incident-lga-2025",
+    name: "LaGuardia Aborted Takeoff · May 2025",
+    brief: "Republic Airways/American Eagle 8646 began takeoff roll on runway 22 while a United 737 was still on the same runway. Republic crew aborted at high speed.",
+    build: buildLGA2025,
+    incident: {
+      year: 2025,
+      location: "New York LaGuardia (KLGA)",
+      report: "FAA / NTSB joint investigation (2025)",
+      summary:
+        "No fatalities. NTSB investigation flagged ATC clearance sequencing as the root cause. Part of a 2025 cluster of near-miss events the FAA tracked across NYC-area airports.",
+      aiWouldFlag:
+        "RUNWAY CONFLICT — multiple aircraft on the same runway with takeoff intent. Would have raised critical alert at the moment clearance was issued to RPA8646.",
+    },
+  },
+  {
+    id: "incident-jfk-2026",
+    name: "JFK Airborne Near-Miss · Apr 2026",
+    brief: "American Airlines 737 and Air Canada A321 departing JFK came within 350 ft of each other shortly after takeoff. Conflicting departure headings.",
+    build: buildJFK2026,
+    incident: {
+      year: 2026,
+      location: "New York Kennedy (KJFK)",
+      report: "FAA ASIAS / NTSB preliminary (2026)",
+      summary:
+        "350-ft horizontal separation; both crews followed ATC instructions. Triggered FAA review of NYC TRACON departure sequencing.",
+      aiWouldFlag:
+        "PROXIMITY CONFLICT — two departures with converging vectors and ~150 ft vertical separation within 2 NM. Predictive engine would have flagged the conflict before the second clearance was issued.",
+    },
+  },
+  {
+    id: "incident-comair5191-2006",
+    name: "Comair 5191 · 2006",
+    brief:
+      "CRJ cleared for runway 22 began its takeoff roll on unlit 3,501 ft runway 26 in pre-dawn darkness. Overran at ~137 kts.",
+    build: buildComair5191,
+    incident: {
+      year: 2006,
+      location: "Blue Grass Airport (KLEX), Lexington, Kentucky",
+      report: "NTSB AAR-07/05",
+      summary:
+        "The crew taxied to and departed from runway 26 (3,501 ft) instead of the assigned runway 22 (7,003 ft). The aircraft ran off the end and crashed; 49 of the 50 aboard died. The NTSB cited the flight crew's failure to use available cues to confirm the airplane's position before takeoff.",
+      aiWouldFlag:
+        "RUNWAY IDENTITY — the aircraft's heading on the roll (264°) matched runway 26, not the assigned runway 22 (227°). The 37° discrepancy was present from the start of the takeoff roll, inside the window where a rejected takeoff was survivable.",
+    },
+  },
+  {
+    id: "incident-aa11-2001",
+    name: "American 11 · 2001 (blind spot)",
+    brief:
+      "Transponder off, 100° route deviation, descending toward Manhattan. This population sees nothing — and that is the documented finding.",
+    build: buildAA11,
+    incident: {
+      year: 2001,
+      location: "New York Center airspace (ZNY)",
+      report: "9/11 Commission Report; NTSB flight path study, AA11",
+      summary:
+        "American 11 was hijacked after departing Boston; the transponder was switched off at 08:21 and the aircraft flew off-route south to Manhattan. None of the four hijacked aircraft that morning squawked 7500. Controllers tracked a primary target with no altitude readout and no identity.",
+      aiWouldFlag:
+        "NOTHING — deliberately. The detectable signatures were transponder loss and flight-plan deviation. This population holds no squawk history and no flight plans, and live ADS-B cannot see a non-transponding aircraft at all. The scenario documents the blind spot; closing it requires primary-radar correlation and route-conformance monitoring, both listed as future work.",
+    },
+  },
+  {
+    id: "drill-squawk-7500",
+    name: "Drill · Hijack code 7500",
+    brief:
+      "Synthetic drill: a crew sets 7500 per post-2001 procedure. The squawk-emergency detector must raise it critical without on-frequency acknowledgement.",
+    build: buildSquawkDrill,
+  },
+  {
+    id: "negative-control-asrs",
+    name: "Negative Control · ASRS-style safe resolution",
+    brief: "Two aircraft on KSFO approach briefly within 1.5 NM / 600 ft. ATC issued a vector and they resolved safely. Detector must NOT fire critical.",
+    build: buildNegativeControl,
+    incident: {
+      year: 2024,
+      location: "San Francisco (KSFO) approach (illustrative; not a real incident)",
+      report: "ASRS-style synthetic scenario constructed from common controller narrative",
+      summary:
+        "Two arrivals briefly inside warning thresholds (1.5 NM horizontal, 600 ft vertical) on parallel approaches. ATC issued a vector and the conflict resolved without RA. This scenario is a negative control: the system must NOT produce a critical proximity-conflict alert; an advisory or warning tier is acceptable.",
+      aiWouldFlag:
+        "PROXIMITY CONFLICT at warning tier (not critical) — separation is below the warning threshold but well outside the TCAS RA approximation. Critical-tier alert would indicate detector over-sensitivity.",
+    },
+  },
+  {
+    id: "negative-control-goaround",
+    name: "Negative Control · Go-around, spacing restored",
+    brief:
+      "Trailing arrival breaks off and climbs on an offset heading; pair briefly at 1.6 NM / 800 ft. Warning acceptable, critical is a failure.",
+    build: buildNegativeGoAround,
+  },
+  {
+    id: "negative-control-converging-deps",
+    name: "Negative Control · Sequenced crossing departures",
+    brief:
+      "Two departures on crossing runways released in sequence: one airborne and away, one holding short. Expected output: no alerts.",
+    build: buildNegativeConvergingDeps,
+  },
+  {
+    id: "negative-control-staggered",
+    name: "Negative Control · Legal wake spacing on one stream",
+    brief:
+      "Three arrivals on one 28L stream at 9.2 and 10.2 NM in-trail against 5 and 3 NM requirements. Two wake pairs must FORM and both be judged legal. Expected output: no alerts.",
+    build: buildNegativeStaggered,
+  },
+  {
+    id: "negative-control-parallel-approach",
+    name: "Negative Control · Simultaneous parallel approaches",
+    brief:
+      "Two arrivals abreast on 28L and 28R at the FAA minimum 4,300 ft runway separation for simultaneous independent ILS. Ordinary operations. Critical must be zero; the warning tier currently fires, which is the defect this control documents.",
+    build: buildNegativeParallelApproach,
+  },
+  {
+    id: "negative-control-wake-at-minimum",
+    name: "Negative Control · Wake spacing just inside the minimum",
+    brief:
+      "A medium 5.3 NM behind a heavy against a 5 NM requirement, 0.3 NM of margin. The pair must form and stay silent. Expected output: no alerts.",
+    build: buildNegativeWakeAtMinimum,
+  },
+  {
+    id: "negative-control-vfr-corridor",
+    name: "Negative Control · VFR corridor, vertical separation",
+    brief:
+      "Two light aircraft 1.9 NM apart laterally, 1,500 ft apart vertically. The geometry the withdrawn Table 1 miscounted 218 times. Expected output: no alerts.",
+    build: buildNegativeVfrCorridor,
+  },
+  {
+    id: "negative-control-crosswind-ops",
+    name: "Negative Control · Crosswind inside limits",
+    brief:
+      "Sustained crosswind component ~22 kts against a 25 kt limit. Expected output: no alerts.",
+    build: buildNegativeCrosswindOps,
+  },
+  {
+    id: "negative-control-asrs-ewr",
+    name: "ASRS ACN 2071367 · EWR",
+    brief:
+      "A319 within five miles of a heavy 787 on ILS 22L in IMC, inside the stated CWT minimum. Expected output: a wake warning, never a critical.",
+    build: buildNegativeAsrsEwr,
+  },
+  {
+    id: "negative-control-asrs-iah",
+    name: "ASRS CALLBACK 461 · IAH",
+    brief:
+      "Departure level at 2,000 ft with advised traffic crossing 1,000 ft overhead, all pilots visual. Normal crossing separation on the proximity doctrine's vertical boundary; expected output: no alerts.",
+    build: buildNegativeAsrsIah,
+  },
+  {
+    id: "negative-control-asrs-zma",
+    name: "ASRS ACN 2069720 · ZMA",
+    brief:
+      "EMB-175 descending behind a heavy 787 en route, ATC wake caution issued. Approach wake minima do not apply en route, so no wake pair forms; expected output: nothing above warning.",
+    build: buildNegativeAsrsZma,
+  },
+];

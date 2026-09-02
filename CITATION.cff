@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+title: "ATC Decision-Support Prototype: a specialist-detector architecture for air traffic conflict alerting"
+message: "If you use this software or its analysis scripts, please cite it."
+type: software
+authors:
+  - given-names: Filipe
+    family-names: Brito Ferreira
+    email: me@fbritoferreira.com
+    orcid: "https://orcid.org/0009-0005-0200-9417"
+license: Apache-2.0
+version: 0.6.0
+date-released: "2026-09-02"
+
+repository-code: "https://github.com/fbritoferreira/atc-decision-support"
+abstract: >-
+  A research prototype testing whether air traffic control conflict alerting can
+  be composed from a population of small, independent, deterministic detectors
+  sharing a SimState to Alert contract, rather than from a single monolithic rule
+  function. Eleven detectors run behind one orchestrator. Includes 28 scenarios:
+  9 incidents reconstructed from NTSB, ICAO, CIAIAC and ANSV reports, 11
+  negative controls encoding events that resolved safely, three of them from
+  specific NASA ASRS reports, and 8 operational demonstrations loaded from the
+  application's scenario picker. Ships a monolithic reimplementation of the same
+  doctrine for architectural comparison, a live mode ingesting ADS-B and METAR
+  for seventeen airports of which ten are in the United States, and the analysis
+  scripts behind the reported false-positive sampling. The measurement windows
+  themselves are not distributed, so those scripts re-run on a window the user
+  samples rather than reproducing the published figures. The software is a
+  prototype and is not certified or usable for operational air traffic
+  control.
+keywords:
+  - air-traffic-control
+  - decision-support
+  - conflict-detection
+  - aviation-safety
+  - deterministic-systems
+  - ADS-B
+# The concept DOI, which always resolves to the latest version. The
+# version-specific DOI for the first deposit is 10.5281/zenodo.22245226;
+# cite the concept DOI instead, so a citation does not pin a reader to a
+# snapshot that a later release supersedes.
+doi: 10.5281/zenodo.22245225

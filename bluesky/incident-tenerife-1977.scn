@@ -1,0 +1,9 @@
+# Tenerife · 1977
+# KLM 4805 began takeoff roll on runway 30 while Pan Am 1736 was still backtaxiing on same runway. Dense fog.
+# Exported from the ATC prototype scenario "incident-tenerife-1977" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 28.482752,-16.341707
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE KLM4805,B742,28.487752,-16.341707,300,0,30
+00:00:00.00>CRE PAA1736,B742,28.479419,-16.349292,120,0,10
+00:00:00.00>HOLD

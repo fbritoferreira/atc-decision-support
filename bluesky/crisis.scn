@@ -1,0 +1,12 @@
+# Multi-Fault Crisis
+# Thunderstorm + wake violation + gate conflict + fuel emergencies stacked.
+# Exported from the ATC prototype scenario "crisis" by
+# scripts/export-bluesky-scn.mjs. Regenerate rather than edit.
+00:00:00.00>PAN 37.618800,-122.375400
+00:00:00.00>ZOOM 2
+00:00:00.00>CRE UAL901,B789,37.652133,-122.480607,281,1200,220
+00:00:00.00>CRE SKW42,CRJ7,37.635467,-122.564773,281,2600,220
+00:00:00.00>CRE FDX901,B763,37.568800,-122.754145,281,4800,220
+00:00:00.00>CRE SWA88,B737,37.668800,-122.396441,281,0,0
+00:00:00.00>CRE AAL77,B77W,37.485467,-123.174973,281,12000,360
+00:00:00.00>HOLD
